@@ -43,15 +43,15 @@ try
 				print_endline "Parsing...";
 				print_endline (Xml.to_string_fmt x);
 			with
-				| Xml.Error msg as e ->
+				| Xml.Error msg ->
 					Printf.printf "Xml error : %s\n" (Xml.error msg)
-				| Dtd.Parse_error msg as e ->
+				| Dtd.Parse_error msg ->
 					Printf.printf "Dtd parse error : %s\n" (Dtd.parse_error msg)
-				| Dtd.Check_error msg as e ->
+				| Dtd.Check_error msg ->
 					Printf.printf "Dtd check error : %s\n" (Dtd.check_error msg)
-				| Dtd.Prove_error msg as e ->
+				| Dtd.Prove_error msg ->
 					Printf.printf "Dtd prove error : %s\n" (Dtd.prove_error msg))
-		| s -> 
+		| s ->
 			buf := !buf ^ s ^ "\n"
 	done
 with

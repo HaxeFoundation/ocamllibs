@@ -20,6 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA
  *)	
+
+open Xml_light_types
 %}
 %token NEXT OR
 %token <string>IDENT
@@ -31,7 +33,7 @@
 %right STAR QUESTION PLUS
 
 %start dtd_element
-%type <Dtd.dtd_child> dtd_element
+%type <Xml_light_types.dtd_child> dtd_element
 %%
 
 dtd_element:
@@ -46,9 +48,9 @@ dtd_full_seq:
 ;
 dtd_seq:
 	| dtd_item NEXT dtd_children
-		{ Dtd.DTDChildren ($1 :: $3) }
+		{ DTDChildren ($1 :: $3) }
 	| dtd_item OR dtd_choice
-		{ Dtd.DTDChoice ($1 :: $3) }
+		{ DTDChoice ($1 :: $3) }
 	| dtd_item
 		{ $1 }
 ;
@@ -72,13 +74,13 @@ dtd_item:
 ;
 dtd_member:
 	| IDENT dtd_op
-		{ $2 (Dtd.DTDTag $1) }
+		{ $2 (DTDTag $1) }
 	| PCDATA dtd_op
-		{ $2 Dtd.DTDPCData }
+		{ $2 DTDPCData }
 	| IDENT
-		{ Dtd.DTDTag $1 }
+		{ DTDTag $1 }
 	| PCDATA
-		{ Dtd.DTDPCData }
+		{ DTDPCData }
 ;
 dtd_op:
 	| dtd_op_item dtd_op
@@ -88,9 +90,9 @@ dtd_op:
 ;
 dtd_op_item:
 	| STAR
-		{ (fun x -> Dtd.DTDZeroOrMore x) }
+		{ (fun x -> DTDZeroOrMore x) }
 	| QUESTION
-		{ (fun x -> Dtd.DTDOptional x) }
+		{ (fun x -> DTDOptional x) }
 	| PLUS
-		{ (fun x -> Dtd.DTDOneOrMore x) }
+		{ (fun x -> DTDOneOrMore x) }
 ;

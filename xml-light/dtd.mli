@@ -21,6 +21,9 @@
  * MA 02110-1301 USA
  *)
 
+open Xml_light_types
+open Xml_light_errors
+
 (** Xml Light DTD
 
 	This module provide several functions to create, check, and use DTD
@@ -47,8 +50,7 @@
 *)
 
 (** {6 The DTD Types} *)
-
-type dtd_child =
+type dtd_child = Xml_light_types.dtd_child =
 	| DTDTag of string
 	| DTDPCData
 	| DTDOptional of dtd_child
@@ -57,31 +59,31 @@ type dtd_child =
 	| DTDChoice of dtd_child list
 	| DTDChildren of dtd_child list
 
-type dtd_element_type =
+type dtd_element_type = Xml_light_types.dtd_element_type =
 	| DTDEmpty
 	| DTDAny
 	| DTDChild of dtd_child
 
-type dtd_attr_default =
+type dtd_attr_default = Xml_light_types.dtd_attr_default =
 	| DTDDefault of string
 	| DTDRequired
 	| DTDImplied
 	| DTDFixed of string
 
-type dtd_attr_type =
+type dtd_attr_type = Xml_light_types.dtd_attr_type =
 	| DTDCData
 	| DTDNMToken
 	| DTDEnum of string list
 	| DTDID
 	| DTDIDRef
 
-type dtd_item =
+type dtd_item = Xml_light_types.dtd_item =
 	| DTDAttribute of string * string * dtd_attr_type * dtd_attr_default
 	| DTDElement of string * dtd_element_type
 
 type dtd = dtd_item list
 
-type checked
+type checked = Xml_light_dtd_check.checked
 
 (** {6 The DTD Functions} *)
 
@@ -110,7 +112,7 @@ val check : dtd -> checked
  Raise {!Dtd.Check_error} [ElementNotDeclared] if the entry point
  is not found, raise {!Dtd.Prove_error} if the Xml document failed
  to be proved with the DTD. *)
-val prove : checked -> string -> Xml.xml -> Xml.xml
+val prove : checked -> string -> xml -> xml
 
 (** Print a DTD element into a string. You can easily get a DTD
  document from a DTD data structure using for example
@@ -133,14 +135,14 @@ val to_string : dtd_item -> string
 	to report errors to the user.
 *)
 
-type parse_error_msg =
+type parse_error_msg = Xml_light_errors.dtd_parse_error_msg =
 	| InvalidDTDDecl
 	| InvalidDTDElement
 	| InvalidDTDAttribute
 	| InvalidDTDTag
 	| DTDItemExpected
 
-type check_error =
+type check_error = Xml_light_errors.dtd_check_error =
 	| ElementDefinedTwice of string
 	| AttributeDefinedTwice of string * string
 	| ElementEmptyContructor of string
@@ -148,7 +150,7 @@ type check_error =
 	| ElementNotDeclared of string
 	| WrongImplicitValueForID of string * string
 
-type prove_error =
+type prove_error = Xml_light_errors.dtd_prove_error =
 	| UnexpectedPCData
 	| UnexpectedTag of string
 	| UnexpectedAttribute of string
@@ -159,7 +161,7 @@ type prove_error =
 	| DuplicateID of string
 	| MissingID of string
 
-type parse_error = parse_error_msg * Xml.error_pos
+type parse_error = parse_error_msg * error_pos
 
 exception Parse_error of parse_error
 exception Check_error of check_error
@@ -168,8 +170,3 @@ exception Prove_error of prove_error
 val parse_error : parse_error -> string
 val check_error : check_error -> string
 val prove_error : prove_error -> string
-
-(**/**)
-
-(* internal usage only... *)
-val _raises : (string -> exn) -> unit

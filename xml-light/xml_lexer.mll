@@ -23,7 +23,7 @@
 
 open Lexing
 open Xml_parser
-open Dtd
+open Xml_light_types
 
 type error =
 	| EUnterminatedComment
@@ -68,14 +68,22 @@ and current_line_start = ref 0
 
 let tmp = Buffer.create 200
 
-let idents = Hashtbl.create 0
 
+let entities = [
+  "gt"  ,62, ">";
+  "lt"  ,60, "<";
+  "amp" ,38, "&";
+  "apos",39, "'";
+  "quot",34, "\"";
+]
+
+let idents = Hashtbl.create 0
 let _ = begin
-	Hashtbl.add idents "gt;" ">";
-	Hashtbl.add idents "lt;" "<";
-	Hashtbl.add idents "amp;" "&";
-	Hashtbl.add idents "apos;" "'";
-	Hashtbl.add idents "quot;" "\"";
+  List.iter (fun (str,code,res) ->
+      Hashtbl.add idents (str^";") res;
+      if code > 0
+      then Hashtbl.add idents ("#" ^ string_of_int code ^ ";") res
+    ) entities
 end
 
 let init lexbuf =
@@ -108,13 +116,23 @@ let error lexbuf e =
 let dtd_error lexbuf e =
 	last_pos := lexeme_start lexbuf;
 	raise (DTDError e)
+
+let error_pos_of_pos (line, lstart, min, max) =
+	{
+		Xml_light_errors.eline = line;
+		Xml_light_errors.eline_start = lstart;
+		Xml_light_errors.emin = min;
+		Xml_light_errors.emax = max;
+	}
+
+let error_pos lexbuf = error_pos_of_pos (pos lexbuf)
 }
 
 let newline = ['\n']
 let break = ['\r']
 let space = [' ' '\t']
 let identchar =  ['A'-'Z' 'a'-'z' '_' '0'-'9' ':' '-']
-let entitychar = ['A'-'Z' 'a'-'z']
+let entitychar = ['A'-'Z' 'a'-'z' '0'-'9']
 let pcchar = [^ '\r' '\n' '<' '>' '&']
 let cdata_start = ['c''C']['d''D']['a''A']['t''T']['a''A']
 
@@ -143,7 +161,7 @@ rule token = parse
 			last_pos := lexeme_start lexbuf;
 			Buffer.reset tmp;
 			PCData (cdata lexbuf)
-		}		
+		}
 	| "<!--"
 		{
 			last_pos := lexeme_start lexbuf;
@@ -171,13 +189,6 @@ rule token = parse
 			ignore_spaces lexbuf;
 			let attribs, closed = attributes lexbuf in
 			Tag(tag, attribs, closed)
-		}
-	| "&#"
-		{
-			last_pos := lexeme_start lexbuf;
-			Buffer.reset tmp;
-			Buffer.add_string tmp (lexeme lexbuf);
-			PCData (pcdata lexbuf)
 		}
 	| '&'
 		{
@@ -232,7 +243,7 @@ and header = parse
 	| eof
 		{ error lexbuf ECloseExpected }
 	| _
-		{ header lexbuf }		
+		{ header lexbuf }
 
 and cdata = parse
 	| [^ ']' '\n']+
@@ -240,7 +251,7 @@ and cdata = parse
 			Buffer.add_string tmp (lexeme lexbuf);
 			cdata lexbuf
 		}
-	| newline 
+	| newline
 		{
 			newline lexbuf;
 			Buffer.add_string tmp (lexeme lexbuf);
@@ -262,11 +273,6 @@ and pcdata = parse
 			Buffer.add_string tmp (lexeme lexbuf);
 			pcdata lexbuf
 		}
-	| "&#"
-		{
-			Buffer.add_string tmp (lexeme lexbuf);
-			pcdata lexbuf;
-		}
 	| '&'
 		{
 			Buffer.add_string tmp (entity lexbuf);
@@ -284,6 +290,14 @@ and entity = parse
 			with
 				Not_found -> "&" ^ ident
 		}
+  | '#' ['0'-'9']+ ';'
+    {
+			let ident = lexeme lexbuf in
+			try
+				Hashtbl.find idents (String.lowercase ident)
+			with
+				Not_found -> "&" ^ ident
+    }
 	| _ | eof
 		{ raise (Error EUnterminatedEntity) }
 
@@ -346,7 +360,7 @@ and dq_string = parse
 	| eof
 		{ raise (Error EUnterminatedString) }
 	| _
-		{ 
+		{
 			Buffer.add_char tmp (lexeme_char lexbuf 0);
 			dq_string lexbuf
 		}
@@ -362,7 +376,7 @@ and q_string = parse
 	| eof
 		{ raise (Error EUnterminatedString) }
 	| _
-		{ 
+		{
 			Buffer.add_char tmp (lexeme_char lexbuf 0);
 			q_string lexbuf
 		}
@@ -414,7 +428,7 @@ and dtd_file = parse
 
 and dtd_intern = parse
 	| ']'
-		{ 
+		{
 			ignore_spaces lexbuf;
 			[]
 		}
@@ -491,19 +505,19 @@ and dtd_item_type = parse
 		{
 			ignore_spaces lexbuf;
 			TAttribute
-		} 
+		}
 	| _ | eof
 		{ dtd_error lexbuf EInvalidDTDTag }
 
 and dtd_element_type = parse
 	| "ANY"
-		{ 
+		{
 			ignore_spaces lexbuf;
 			dtd_end_element lexbuf;
 			DTDAny
 		}
 	| "EMPTY"
-		{ 
+		{
 			ignore_spaces lexbuf;
 			dtd_end_element lexbuf;
 			DTDEmpty
@@ -521,13 +535,13 @@ and dtd_element_type = parse
 		{ dtd_error lexbuf EInvalidDTDElement }
 
 and dtd_end_element = parse
-	| '>' 
+	| '>'
 		{ ignore_spaces lexbuf }
 	| _ | eof
 		{ dtd_error lexbuf EInvalidDTDElement }
 
 and dtd_end_attribute = parse
-	| '>' 
+	| '>'
 		{ ignore_spaces lexbuf }
 	| _ | eof
 		{ dtd_error lexbuf EInvalidDTDAttribute }
@@ -591,7 +605,7 @@ and dtd_attr_type = parse
 		}
 	| _ | eof
 		{ dtd_error lexbuf EInvalidDTDAttribute }
-	
+
 and dtd_attr_enum = parse
 	| identchar+
 		{

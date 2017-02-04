@@ -1,7 +1,5 @@
-Xml-Light Version 2.3 :
+Xml-Light Version 2.4 :
 -----------------------
-
-Last version : http://tech.motion-twin.com
 
   Xml Light is a minimal Xml parser & printer for OCaml.
   It provide few functions to parse a basic Xml document into

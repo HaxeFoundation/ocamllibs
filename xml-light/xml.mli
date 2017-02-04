@@ -37,10 +37,9 @@
 
 (** An Xml node is either
 	[Element (tag-name, attributes, children)] or [PCData text] *)
-type xml = 
+type xml = Xml_light_types.xml =
 	| Element of (string * (string * string) list * xml list)
 	| PCData of string
-
 (** {6 Xml Parsing} *)
 
 (** For easily parsing an Xml data source into an xml data structure,
@@ -77,9 +76,9 @@ val parse_string : string -> xml
 	can be raised, see the module {!Dtd} for more informations.
  *)
 
-type error_pos
+type error_pos = Xml_light_errors.error_pos
 
-type error_msg =
+type error_msg = Xml_light_errors.xml_error_msg =
 	| UnterminatedComment
 	| UnterminatedString
 	| UnterminatedEntity

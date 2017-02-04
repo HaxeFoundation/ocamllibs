@@ -23,18 +23,11 @@
 
 open Printf
 
-type xml = 
+type xml = Xml_light_types.xml =
 	| Element of (string * (string * string) list * xml list)
 	| PCData of string
 
-type error_pos = {
-	eline : int;
-	eline_start : int;
-	emin : int;
-	emax : int;
-}
-
-type error_msg =
+type error_msg = Xml_light_errors.xml_error_msg =
 	| UnterminatedComment
 	| UnterminatedString
 	| UnterminatedEntity
@@ -45,6 +38,13 @@ type error_msg =
 	| AttributeValueExpected
 	| EndOfTagExpected of string
 	| EOFExpected
+
+type error_pos = Xml_light_errors.error_pos = {
+	eline : int;
+	eline_start : int;
+	emin : int;
+	emax : int;
+}
 
 type error = error_msg * error_pos
 
@@ -57,18 +57,7 @@ exception No_attribute of string
 
 let default_parser = XmlParser.make()
 
-let pos source =
-	let line, lstart, min, max = Xml_lexer.pos source in
-	{
-		eline = line;
-		eline_start = lstart;
-		emin = min;
-		emax = max;
-	}
-
-let parse (p:XmlParser.t) (source:XmlParser.source) =
-	(* local cast Xml.xml -> xml *)
-	(Obj.magic XmlParser.parse p source : xml)
+let parse = XmlParser.parse
 
 let parse_in ch = parse default_parser (XmlParser.SChannel ch)
 let parse_string str = parse default_parser (XmlParser.SString str)
@@ -258,11 +247,3 @@ let to_string_fmt x =
 	s
 
 ;;
-XmlParser._raises (fun x p -> 
-	(* local cast : Xml.error_msg -> error_msg *)
-	Error ((Obj.magic x : error_msg),pos p))
-	(fun f -> File_not_found f)
-	(fun x p -> Dtd.Parse_error (x,
-	(* local cast : Xml.error_pos -> error_pos *)
-		(Obj.magic (pos p))));
-Dtd._raises (fun f -> File_not_found f);

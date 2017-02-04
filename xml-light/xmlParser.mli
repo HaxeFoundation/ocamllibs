@@ -58,7 +58,7 @@ val prove : t -> bool -> unit
  loading strategy, and can use the {!Dtd} module functions to parse and check
  the DTD file {i (by default, the resolve function is raising}
  {!Xml.File_not_found}). *)
-val resolve : t -> (string -> Dtd.checked) -> unit
+val resolve : t -> (string -> Xml_light_dtd_check.checked) -> unit
 
 (** When a Xml document is parsed, the parser will check that the end of the
  document is reached, so for example parsing ["<A/><B/>"] will fail instead
@@ -68,15 +68,10 @@ val check_eof : t -> bool -> unit
 
 (** Once the parser is configurated, you can run the parser on a any kind
  of xml document source to parse its contents into an Xml data structure. *)
-val parse :  t -> source -> Xml.xml
+val parse :  t -> source -> Xml_light_types.xml
 
 (** When several PCData elements are separed by a \n (or \r\n), you can
  either split the PCData in two distincts PCData or merge them with \n
  as seperator into one PCData. The default behavior is to concat the
  PCData, but this can be changed for a given parser with this flag. *)
 val concat_pcdata : t -> bool -> unit
-
-(**/**)
-
-(* internal usage only... *)
-val _raises : (Xml.error_msg -> Lexing.lexbuf -> exn) -> (string -> exn) -> (Dtd.parse_error_msg -> Lexing.lexbuf -> exn) -> unit

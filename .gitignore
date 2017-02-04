@@ -16,3 +16,6 @@
 /ilib/dump
 *.cmo
 *.cma
+*.mldylib
+*.mllib
+META

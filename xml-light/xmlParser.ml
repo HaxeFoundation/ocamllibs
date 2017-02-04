@@ -23,14 +23,14 @@
  *)
 
 open Printf
-open Dtd
-open Xml
+open Xml_light_types
+open Xml_light_errors
 
 type t = {
 	mutable prove : bool;
 	mutable check_eof : bool;
 	mutable concat_pcdata : bool;
-	mutable resolve : (string -> checked);
+	mutable resolve : (string -> Xml_light_dtd_check.checked);
 }
 
 type source = 
@@ -45,24 +45,15 @@ type state = {
 	xparser : t;
 }
 
-exception Internal_error of Xml.error_msg
+exception Internal_error of xml_error_msg
 exception NoMoreData
-
-let xml_error = ref (fun _ -> assert false)
-let dtd_error = ref (fun _ -> assert false)
-let file_not_found = ref (fun _ -> assert false)
-
-let _raises e f d =
-	xml_error := e;
-	file_not_found := f;
-	dtd_error := d
 
 let make () =
 	{
 		prove = true;
 		check_eof = true;
 		concat_pcdata = true;
-		resolve = (fun file -> raise (!file_not_found file))
+		resolve = (fun file -> raise (File_not_found file))
 	}
 
 let prove p v = p.prove <- v
@@ -144,6 +135,16 @@ let dtd_convert = function
 	| Xml_lexer.EInvalidDTDElement -> InvalidDTDElement
 	| Xml_lexer.EInvalidDTDAttribute -> InvalidDTDAttribute
 
+
+let pos source =
+	let line, lstart, min, max = Xml_lexer.pos source in
+	{
+		eline = line;
+		eline_start = lstart;
+		emin = min;
+		emax = max;
+	}
+
 let do_parse xparser source =
 	try
 		Xml_lexer.init source;
@@ -158,23 +159,23 @@ let do_parse xparser source =
 	with
 		| NoMoreData ->
 			Xml_lexer.close source;
-			raise (!xml_error NodeExpected source)
+			raise (Xml_error (NodeExpected, pos source))
 		| Internal_error e ->
 			Xml_lexer.close source;
-			raise (!xml_error e source)
+			raise (Xml_error (e, pos source))
 		| Xml_lexer.Error e ->
 			Xml_lexer.close source;
-			raise (!xml_error (convert e) source)
+			raise (Xml_error (convert e, pos source))
 		| Xml_lexer.DTDError e ->
 			Xml_lexer.close source;
-			raise (!dtd_error (dtd_convert e) source)
+			raise (Dtd_parse_error (dtd_convert e, pos source))
 
 let parse p = function
 	| SChannel ch -> do_parse p (Lexing.from_channel ch)
 	| SString str -> do_parse p (Lexing.from_string str)
 	| SLexbuf lex -> do_parse p lex
 	| SFile fname ->
-		let ch = (try open_in fname with Sys_error _ -> raise (!file_not_found fname)) in
+		let ch = (try open_in fname with Sys_error _ -> raise (File_not_found fname)) in
 		try
 			let x = do_parse p (Lexing.from_channel ch) in
 			close_in ch;
