@@ -19,3 +19,4 @@
 *.mldylib
 *.mllib
 META
+*.clib
