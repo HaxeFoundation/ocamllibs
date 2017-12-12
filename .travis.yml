@@ -7,6 +7,11 @@ os:
 dist: trusty
 sudo: required
 
+env:
+  global:
+    # 3.4_bugfix is not safe-string compatible
+    - OCAMLPARAM="safe-string=0,_"
+
 install:
   # Install dependencies
   - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
