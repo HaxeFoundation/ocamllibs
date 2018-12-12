@@ -13,7 +13,7 @@ pcre.cma: pcre_stubs.o pcre.ml
 	$(OCAMLC) -a -o pcre.cma $(LIBS) pcre.ml
 
 pcre.cmxa: pcre.ml pcre_stubs.o
-	$(OCAMLOPT) -a -o pcre.cmxa $(LIBS) pcre.ml
+	$(OCAMLOPT) -unsafe-string -a -o pcre.cmxa $(LIBS) pcre.ml
 
 pcre_stubs.o: pcre_stubs.c
 	$(OCAMLC) $(ALL_CFLAGS) pcre_stubs.c

@@ -23,7 +23,7 @@ extLib.cma: $(SRC)
 	$(OCAMLC) -a -o extLib.cma $(SRC)
 
 extLib.cmxa: $(SRC)
-	$(OCAMLOPT) -g -a -o extLib.cmxa $(SRC)
+	$(OCAMLOPT) -unsafe-string -g -a -o extLib.cmxa $(SRC)
 
 doc:
 	$(OCAMLC) -c $(MODULES:=.mli)

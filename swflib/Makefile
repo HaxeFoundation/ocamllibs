@@ -4,7 +4,7 @@ OCAMLOPT=ocamlopt
 OCAMLC=ocamlc
 .SUFFIXES : .ml .mli .cmo .cmi .cmx .mll .mly
 
-ALL_CFLAGS= $(CFLAGS) -I ../extlib -I ../extc -g
+ALL_CFLAGS= $(CFLAGS) -unsafe-string -I ../extlib -I ../extc -g
 LIBS=
 
 SRC=actionScript.ml as3hl.mli as3.mli png.ml swflib.sln swf.ml swfPic.ml as3code.ml as3hlparse.ml as3parse.ml png.mli swfParser.ml

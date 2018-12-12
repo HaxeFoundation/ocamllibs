@@ -6,7 +6,7 @@ all: native bytecode
 
 native: zip.cmxa
 zip.cmxa: $(SRC)
-	$(OCAMLOPT) -g -I ../extlib -I ../extc -a -o zip.cmxa $(SRC)
+	$(OCAMLOPT) -unsafe-string -g -I ../extlib -I ../extc -a -o zip.cmxa $(SRC)
 
 bytecode: zip.cma
 zip.cma: $(SRC)
